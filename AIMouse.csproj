@@ -12,7 +12,9 @@
     <RootNamespace>AIMouse</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Product>AI翻译鼠标</Product>
-    <Version>0.6.1</Version>
+    <Version>0.7.0</Version>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
     <ApplicationIcon>Assets\logo.ico</ApplicationIcon>
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
   </PropertyGroup>
@@ -38,6 +40,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="NAudio.WinMM" Version="3.3.0" />
+    <PackageReference Include="org.k2fsa.sherpa.onnx" Version="2.0.1" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
     <PackageReference Include="System.Speech" Version="9.0.0" />
   </ItemGroup>

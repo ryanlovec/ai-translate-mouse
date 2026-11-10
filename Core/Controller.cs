@@ -67,6 +67,9 @@ public sealed class Controller
             // Esc leaves the immersive modes (译文 / 对照 / full screen) at any time.
             if (_session is { } ss && (ss.View != ViewMode.Side || ss.Mode == SessionMode.FullScreen)) ss.Close();
         };
+        _hook.TalkEnabled = () => Config.VoiceInput;
+        _hook.TalkDown += OnTalkDown;
+        _hook.TalkUp += OnTalkUp;
         _toast.AutoHidden += () => { if (!(_dragActive && _dragCopy)) _copySelection.Hide(); };
     }
 
@@ -285,6 +288,87 @@ public sealed class Controller
             _toast.ShowResult(r, false, "复制失败：剪贴板被别的程序占用，请再试一次", "");
         else
             _toast.ShowResult(r, true, $"✓ {okTitle} · {text.Count(c => !char.IsWhiteSpace(c))} 字", text);
+    }
+
+    // ---------------- voice input: hold right Alt, speak, let go → text is typed where the cursor is ----------------
+
+    /// <summary>Asks the app to open Settings (e.g. to download the speech model).</summary>
+    public event Action? OpenSettingsRequested;
+    VoicePill? _pill;
+    AIMouse.Voice.Recorder? _recorder;
+    bool _recording, _recognizing;
+    long _talkStart;
+
+    void OnTalkDown()
+    {
+        if (_recognizing) return;
+        _pill ??= new VoicePill();
+        if (!AIMouse.Voice.SpeechToText.Installed)
+        {
+            _pill.ShowResult("语音输入需要先下载语音模型", "在设置里一键下载 · 约 230MB", 4);
+            OpenSettingsRequested?.Invoke();
+            return;
+        }
+        if (!AIMouse.Voice.Recorder.HasMicrophone)
+        {
+            _pill.ShowResult("没有找到麦克风", "请接上麦克风或耳机再试", 3);
+            return;
+        }
+        try
+        {
+            AIMouse.Voice.SpeechToText.Warm();
+            if (_recorder == null)
+            {
+                _recorder = new AIMouse.Voice.Recorder();
+                _recorder.Level += lv => Dispatcher.BeginInvoke(() => { if (_recording) _pill?.SetLevel(lv); });
+            }
+            _recorder.Start();
+            _recording = true;
+            _talkStart = Environment.TickCount64;
+            _pill.ShowListening();
+        }
+        catch (Exception ex)
+        {
+            Log.Write("Mic start failed: " + ex.Message);
+            _pill.ShowResult("打不开麦克风", "请在 Windows 设置 → 隐私 → 麦克风 里允许桌面应用使用", 4);
+        }
+    }
+
+    async void OnTalkUp()
+    {
+        if (!_recording || _recorder == null || _pill == null) return;
+        _recording = false;
+        var samples = _recorder.Stop();
+        if (Environment.TickCount64 - _talkStart < 350 || samples.Length < AIMouse.Voice.SpeechToText.SampleRate / 3)
+        {
+            _pill.Hide();
+            return;
+        }
+        _recognizing = true;
+        _pill.ShowWorking();
+        try
+        {
+            var text = await AIMouse.Voice.SpeechToText.RecognizeAsync(samples);
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                _pill.ShowResult("没有听清，请再说一次", "", 2);
+                return;
+            }
+            if (!TrySetClipboard(text))
+            {
+                _pill.ShowResult("剪贴板被占用，请再试一次", "", 2.5);
+                return;
+            }
+            await Task.Delay(60);
+            InputHook.SendPaste();
+            _pill.ShowResult(text, "已输入 · 也已复制", 2.6);
+        }
+        catch (Exception ex)
+        {
+            Log.Write("Voice input failed: " + ex);
+            _pill.ShowResult("语音识别出错了", ex.Message, 3);
+        }
+        finally { _recognizing = false; }
     }
 
     static bool TrySetClipboard(string text)

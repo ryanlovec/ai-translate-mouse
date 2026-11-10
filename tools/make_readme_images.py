@@ -95,3 +95,17 @@ for i, t in enumerate(["原文  Original", "译文  Translated in place"]):
 save(frame(caption(both, ["Ctrl", "Ctrl"], "连按两下 Ctrl：整页变中文，滚动也跟着走", "Double-tap Ctrl: the whole screen in Chinese, follows scrolling"), 0.45), "fullscreen.png")
 # 5. copy
 save(frame(caption(load("5_copy.png", (0, 0, 1400, 800)), ["Ctrl", "右键拖框"], "按住 Ctrl 右键拖框：识别文字并复制", "Hold Ctrl and right-drag: copy text from images or any app"), 0.7), "copy.png")
+
+# 6. voice input (shots from `AIMouse.exe --selftest-pill <dir> --visible-to-capture`)
+if os.path.exists(os.path.join(src, "pill_listen.png")):
+    a = load("pill_listen.png", (0, 0, 900, 125))
+    b = load("pill_done.png", (0, 0, 900, 125))
+    f_small = ImageFont.truetype(FONT, 18)
+    col = Image.new("RGB", (900, 2 * 125 + 90), (245, 245, 247))
+    dd = ImageDraw.Draw(col)
+    a = a.crop((0, 15, 900, 125)); b = b.crop((0, 15, 900, 125))
+    dd.text((30, 14), "① 按住说话  Hold and speak", font=f_small, fill=GREY)
+    col.paste(a, (0, 45))
+    dd.text((30, 180), "② 松开 → 文字打到光标处  Release → text is typed for you", font=f_small, fill=GREY)
+    col.paste(b, (0, 212))
+    save(frame(caption(col, ["右 Alt"], "按住右 Alt 说话，松开自动打字", "Hold Right Alt and speak — Chinese, English or mixed, offline"), 0.85), "voice.png")

@@ -32,6 +32,10 @@ Turn your mouse into an English → Chinese translator that works on top of ever
 
 <img src="docs/images/copy.png" width="720" alt="Copy text from screen">
 
+**⑤ 语音输入 · Voice typing** — 按住右 Alt 说话，松开自动打字，中英文混说也行，完全离线 / Hold Right Alt, speak, release — offline
+
+<img src="docs/images/voice.png" width="680" alt="Voice input">
+
 ---
 
 <a id="中文"></a>
@@ -53,6 +57,7 @@ Turn your mouse into an English → Chinese translator that works on top of ever
 | 按住 **Ctrl**，指向一个单词 | 在这一行下方弹出单词卡片：音标、释义、例句，可朗读 |
 | 按住 **Ctrl** + 左键拖一个框 | 翻译框里的内容（侧栏 / 对照 / 译文 三种显示方式） |
 | 按住 **Ctrl** + 右键拖一个框 | 识别框里的文字（中文或英文）并复制，图片、不能复制的软件也行 |
+| 按住 **右 Alt** 说话 | 松开后文字自动打到光标处（中文、英文、中英混说都行），同时复制 |
 | 连按两下 **Ctrl** | 全屏实时翻译；“译文”模式用中文直接盖住英文，滚动时译文跟着走，翻过的页面会被记住 |
 | **Esc** | 关闭 / 退出 |
 
@@ -60,6 +65,7 @@ Turn your mouse into an English → Chinese translator that works on top of ever
 - 文字识别：Windows 自带 OCR，截图不上传
 - 离线词典：ECDICT，断网也能查单词
 - 朗读：Windows 自带语音
+- 语音输入：SenseVoice 离线模型（约 230MB，第一次用时在设置里一键下载），不联网、不上传声音，只在说话时占用内存
 - 识别中文需要在 Windows 设置里安装“中文(简体)”语言包
 
 ### 从源码编译
@@ -96,6 +102,7 @@ dotnet publish -c Release -o publish
 | Hold **Ctrl** and point at a word | A word card appears below the line: pronunciation, meaning, example, read-aloud |
 | Hold **Ctrl** + left-drag a box | Translate the box (side panel / under each paragraph / replace in place) |
 | Hold **Ctrl** + right-drag a box | Recognize the text in the box (Chinese or English) and copy it — works on images and apps that block copying |
+| Hold **Right Alt** and speak | Release and the text is typed where your cursor is (Chinese, English or mixed), also copied |
 | Double-tap **Ctrl** | Live full-screen translation. "Replace" mode covers the English with Chinese, follows scrolling, and remembers pages you've seen |
 | **Esc** | Close / exit |
 
@@ -103,6 +110,7 @@ dotnet publish -c Release -o publish
 - Text recognition: built-in Windows OCR — screenshots never leave your PC
 - Offline dictionary: ECDICT, works without internet
 - Read-aloud: built-in Windows voices
+- Voice typing: SenseVoice offline model (~230 MB, one-click download in Settings the first time). No internet, your voice never leaves the PC, memory is used only while you talk
 - Chinese recognition needs the "Chinese (Simplified)" language pack in Windows Settings
 
 ### Build from source
@@ -126,6 +134,7 @@ Capture/    screen capture, scroll tracking, color sampling
 Ocr/        Windows OCR, copy-text cleanup
 Text/       sentence & paragraph splitting
 Translate/  DeepSeek / local models, offline dictionary
+Voice/      microphone, offline speech-to-text (sherpa-onnx + SenseVoice)
 Core/       controller, translation sessions, config, speech
 UI/         word card, panel, settings, replace overlay
 ```
@@ -137,4 +146,5 @@ Design notes: [DESIGN.md](DESIGN.md)
 ## License · 许可证
 
 [MIT](LICENSE). Offline dictionary data from [ECDICT](https://github.com/skywind3000/ECDICT) (MIT).
-离线词典数据来自 ECDICT（MIT 许可）。
+Speech recognition: [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) (Apache-2.0) with the [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) model (downloaded separately, under its own license).
+离线词典数据来自 ECDICT（MIT 许可）；语音识别使用 sherpa-onnx（Apache-2.0）和 SenseVoice 模型（单独下载，遵循其原许可）。

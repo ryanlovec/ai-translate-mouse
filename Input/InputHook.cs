@@ -24,6 +24,10 @@ public sealed class InputHook : IDisposable
     public event Action? DragCancelled;
     public event Action? DoubleTapCtrl;
     public event Action? Escape;
+    /// <summary>Right Alt held / released: push-to-talk voice input. The key itself is swallowed (no menu bar popping up).</summary>
+    public event Action? TalkDown, TalkUp;
+    bool _talkDown;
+    public Func<bool> TalkEnabled { get; set; } = () => true;
 
     public volatile bool Paused;
     public volatile int HoldDelayMs = 180;
@@ -141,6 +145,21 @@ public sealed class InputHook : IDisposable
                 bool up = msg == WM_KEYUP || msg == WM_SYSKEYUP;
                 bool isCtrl = k.vkCode == VK_LCONTROL || k.vkCode == VK_RCONTROL || k.vkCode == VK_CONTROL;
                 long now = Environment.TickCount64;
+
+                if (k.vkCode == VK_RMENU && (_talkDown || (TalkEnabled() && !Paused && !_ctrlDown)))
+                {
+                    if (down && !_talkDown)
+                    {
+                        _talkDown = true;
+                        Raise(() => TalkDown?.Invoke());
+                    }
+                    else if (up && _talkDown)
+                    {
+                        _talkDown = false;
+                        Raise(() => TalkUp?.Invoke());
+                    }
+                    if (down || up) return (IntPtr)1;
+                }
 
                 if (isCtrl)
                 {
@@ -292,6 +311,19 @@ public sealed class InputHook : IDisposable
             }
         }
         return CallNextHookEx(IntPtr.Zero, nCode, wParam, lParam);
+    }
+
+    /// <summary>Paste into whatever app has the keyboard focus (Ctrl+V), marked as ours so the hook ignores it.</summary>
+    public static void SendPaste()
+    {
+        var inputs = new INPUT[4];
+        uint[] vk = { VK_LCONTROL, VK_V, VK_V, VK_LCONTROL };
+        for (int i = 0; i < 4; i++)
+        {
+            inputs[i].type = INPUT_KEYBOARD;
+            inputs[i].U.ki = new KEYBDINPUT { wVk = (ushort)vk[i], dwFlags = i >= 2 ? KEYEVENTF_KEYUP : 0, dwExtraInfo = OurMagic };
+        }
+        SendInput(4, inputs, Marshal.SizeOf<INPUT>());
     }
 
     void InjectClick(bool right)

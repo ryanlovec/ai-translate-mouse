@@ -21,6 +21,15 @@ public partial class SettingsWindow : Window
         AutoStartBox.IsChecked = cfg.StartWithWindows;
         AutoSpeakBox.IsChecked = cfg.AutoSpeakWord;
         if (!Speech.Available) AutoSpeakBox.Visibility = Visibility.Collapsed;
+        VoiceBox.IsChecked = cfg.VoiceInput;
+        AIMouse.Voice.ModelDownloader.Progress += OnModelProgress;
+        AIMouse.Voice.ModelDownloader.Finished += OnModelFinished;
+        Closed += (_, _) =>
+        {
+            AIMouse.Voice.ModelDownloader.Progress -= OnModelProgress;
+            AIMouse.Voice.ModelDownloader.Finished -= OnModelFinished;
+        };
+        ShowModelState();
         if (cfg.HasSavedKey) KeyStateRun.Text = "密钥已保存（不显示），留空即继续使用。";
         if (cfg.UseLocal) LocalRadio.IsChecked = true;
         else CloudRadio.IsChecked = true;
@@ -141,6 +150,7 @@ public partial class SettingsWindow : Window
         if (KeyBox.Password.Trim().Length > 0) _cfg.SetApiKey(KeyBox.Password);
         ApplyTo(_cfg);
         _cfg.AutoSpeakWord = AutoSpeakBox.IsChecked == true;
+        _cfg.VoiceInput = VoiceBox.IsChecked == true;
         bool auto = AutoStartBox.IsChecked == true;
         if (auto != _cfg.StartWithWindows) Config.ApplyStartWithWindows(auto);
         _cfg.StartWithWindows = auto;
@@ -151,6 +161,54 @@ public partial class SettingsWindow : Window
         }
         catch (Exception ex) { Show("保存失败：" + ex.Message, true); }
     }
+
+    // ---------- offline speech model ----------
+
+    void ShowModelState(string? error = null)
+    {
+        if (AIMouse.Voice.ModelDownloader.Running)
+        {
+            VoiceModelBtn.IsEnabled = false;
+            VoiceModelBtn.Content = "下载中";
+            if (VoiceModelStatus.Text.Length == 0) VoiceModelStatus.Text = "正在下载…";
+        }
+        else if (AIMouse.Voice.SpeechToText.Installed)
+        {
+            VoiceModelBtn.IsEnabled = true;
+            VoiceModelBtn.Content = "删除";
+            VoiceModelStatus.Text = "已安装 ✓ · 约 230MB，可离线使用";
+        }
+        else
+        {
+            VoiceModelBtn.IsEnabled = true;
+            VoiceModelBtn.Content = "下载";
+            VoiceModelStatus.Text = error ?? "未安装 · 约 230MB，下载一次即可";
+        }
+    }
+
+    void VoiceModel_Click(object sender, RoutedEventArgs e)
+    {
+        if (AIMouse.Voice.SpeechToText.Installed)
+        {
+            if (MessageBox.Show(this, "删除离线语音模型？删除后语音输入不能用，需要时可再下载。", "AI翻译鼠标", MessageBoxButton.OKCancel) != MessageBoxResult.OK) return;
+            AIMouse.Voice.ModelDownloader.Delete();
+        }
+        else
+        {
+            VoiceModelStatus.Text = "正在连接…";
+            AIMouse.Voice.ModelDownloader.Start();
+        }
+        ShowModelState();
+    }
+
+    void OnModelProgress(long done, long total) => Dispatcher.BeginInvoke(() =>
+    {
+        VoiceModelStatus.Text = total > 0
+            ? $"正在下载 {done * 100 / total}% · {done / 1048576} / {total / 1048576} MB"
+            : $"正在下载 {done / 1048576} MB";
+    });
+
+    void OnModelFinished(string? error) => Dispatcher.BeginInvoke(() => ShowModelState(error));
 
     void Show(string text, bool error, bool ok = false)
     {

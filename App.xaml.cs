@@ -58,6 +58,7 @@ public partial class App : Application
             Shutdown();
             return;
         }
+        _controller.OpenSettingsRequested += OpenSettings;
         _controller.Start();
         SetupTray();
 
@@ -90,6 +91,8 @@ public partial class App : Application
             OpenSettings();
         }
     }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
 
     protected override void OnExit(ExitEventArgs e)
     {
@@ -366,6 +369,95 @@ public partial class App : Application
                     var svc = new OcrService();
                     sb.AppendLine($"CHINESE_OCR {svc.HasChinese}");
                     sb.AppendLine(await svc.RecognizeTextAsync(bmp, 0, 0, up));
+                    break;
+                }
+                case "--selftest-model-download":
+                {
+                    var done = new TaskCompletionSource<string?>();
+                    long last = 0;
+                    AIMouse.Voice.ModelDownloader.Progress += (d, t) => { if (d - last > 50_000_000) { last = d; Log.Write($"[download] {d / 1048576}/{t / 1048576} MB"); } };
+                    AIMouse.Voice.ModelDownloader.Finished += e => done.TrySetResult(e);
+                    var sw = Stopwatch.StartNew();
+                    AIMouse.Voice.ModelDownloader.Start();
+                    var err = await done.Task;
+                    Log.Write($"[download] finished in {sw.Elapsed.TotalSeconds:0}s, error={err ?? "none"}, installed={AIMouse.Voice.SpeechToText.Installed}");
+                    break;
+                }
+                case "--selftest-voice-paste":
+                {
+                    // Recognize a WAV and "type" it into a test text box exactly like voice input does (clipboard + Ctrl+V).
+                    // Only pastes if our test window really has the keyboard focus, so nothing lands in another app.
+                    string? oldClip = null;
+                    try { if (System.Windows.Clipboard.ContainsText()) oldClip = System.Windows.Clipboard.GetText(); } catch { }
+                    var box = new System.Windows.Controls.TextBox { FontSize = 16, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, Text = "Note: " };
+                    var w = new Window { Width = 700, Height = 200, Left = 200, Top = 200, Topmost = true, Content = box, Title = "voice paste test" };
+                    w.Show();
+                    w.Activate();
+                    box.Focus();
+                    box.CaretIndex = box.Text.Length;
+                    await Task.Delay(400);
+                    var hwnd = new System.Windows.Interop.WindowInteropHelper(w).Handle;
+                    string result;
+                    if (GetForegroundWindow() != hwnd) result = "SKIPPED: test window did not get focus";
+                    else
+                    {
+                        var text = await AIMouse.Voice.SpeechToText.RecognizeAsync(AIMouse.Voice.Wav.Read16k(args[1]));
+                        System.Windows.Clipboard.SetDataObject(text, true);
+                        await Task.Delay(60);
+                        if (GetForegroundWindow() == hwnd) AIMouse.Input.InputHook.SendPaste();
+                        await Task.Delay(500);
+                        result = "box now: " + box.Text;
+                    }
+                    try { if (oldClip != null) System.Windows.Clipboard.SetDataObject(oldClip, true); } catch { }
+                    File.WriteAllText(Path.Combine(Path.GetTempPath(), "aimouse_paste.txt"), result);
+                    w.Close();
+                    break;
+                }
+                case "--selftest-pill":
+                {
+                    // Screenshot the voice pill in its states (run with --visible-to-capture).
+                    var pill = new VoicePill();
+                    {
+                        // plain backdrop behind the pill so nothing else on screen ends up in the picture
+                        Win32.GetCursorPos(out var cp0);
+                        var m0 = WindowHelper.GetMonitor(cp0);
+                        var wa0 = m0.Work;
+                        var back = new Window { WindowStyle = WindowStyle.None, ResizeMode = ResizeMode.NoResize, ShowActivated = false, Topmost = true, ShowInTaskbar = false,
+                            Background = new SolidColorBrush(Color.FromRgb(0xF5, 0xF5, 0xF7)), WindowStartupLocation = WindowStartupLocation.Manual };
+                        back.SourceInitialized += (_, _) => Win32.SetWindowPos(new System.Windows.Interop.WindowInteropHelper(back).Handle, IntPtr.Zero,
+                            wa0.Left + wa0.Width / 2 - 460, wa0.Bottom - 170, 920, 170, Win32.SWP_NOACTIVATE);
+                        back.Show();
+                    }
+                    async Task Snap(string name)
+                    {
+                        await Task.Delay(500);
+                        Win32.GetCursorPos(out var cp);
+                        var wa = WindowHelper.GetMonitor(cp).Work;
+                        using var bmp = ScreenCapture.Capture(new RECT(wa.Left + wa.Width / 2 - 450, wa.Bottom - 160, wa.Left + wa.Width / 2 + 450, wa.Bottom));
+                        bmp.Save(Path.Combine(args[1], name), SD.Imaging.ImageFormat.Png);
+                    }
+                    pill.ShowListening();
+                    pill.SetLevel(0.75);
+                    await Snap("pill_listen.png");
+                    pill.ShowWorking();
+                    await Snap("pill_work.png");
+                    pill.ShowResult("我明天要交一个 homework，老师说 the deadline is Friday。", "已输入 · 也已复制");
+                    await Snap("pill_done.png");
+                    break;
+                }
+                case "--selftest-asr":
+                {
+                    // Recognize 16-bit PCM WAV files with the offline speech model and print the text + timing.
+                    var report = new StringBuilder();
+                    foreach (var wav in args.Skip(1))
+                    {
+                        var samples = AIMouse.Voice.Wav.Read16k(wav);
+                        var sw = Stopwatch.StartNew();
+                        var text = await AIMouse.Voice.SpeechToText.RecognizeAsync(samples);
+                        report.AppendLine($"{Path.GetFileName(wav)} ({samples.Length / 16000.0:0.0}s audio, {sw.ElapsedMilliseconds} ms): {text}");
+                    }
+                    report.AppendLine($"memory: {Process.GetCurrentProcess().WorkingSet64 / 1048576} MB");
+                    File.WriteAllText(Path.Combine(Path.GetTempPath(), "aimouse_asr.txt"), report.ToString());
                     break;
                 }
                 case "--selftest-render":

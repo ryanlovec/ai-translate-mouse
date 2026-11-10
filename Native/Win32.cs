@@ -110,7 +110,8 @@ public static class Win32
     public const uint SWP_NOSIZE = 0x1, SWP_NOMOVE = 0x2, SWP_NOACTIVATE = 0x10, SWP_SHOWWINDOW = 0x40;
     public const uint MONITOR_DEFAULTTONEAREST = 2;
     public const uint MOUSEEVENTF_LEFTDOWN = 0x2, MOUSEEVENTF_LEFTUP = 0x4, MOUSEEVENTF_RIGHTDOWN = 0x8, MOUSEEVENTF_RIGHTUP = 0x10;
-    public const uint INPUT_MOUSE = 0;
+    public const uint INPUT_MOUSE = 0, INPUT_KEYBOARD = 1, KEYEVENTF_KEYUP = 0x2;
+    public const uint VK_RMENU = 0xA5, VK_V = 0x56;
     public const uint PM_NOREMOVE = 0;
 
     [DllImport("user32.dll", SetLastError = true)]

@@ -88,6 +88,19 @@
                             </StackPanel>
                         </DockPanel>
                     </Border>
+                    <Border Style="{StaticResource RowSep}" />
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Style="{StaticResource KeyCap}"><TextBlock Style="{StaticResource KeyText}" Text="右 Alt" /></Border>
+                                <TextBlock Text="按住说话" Foreground="{StaticResource Secondary}" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource RowTitle}" Text="语音输入" />
+                                <TextBlock Style="{StaticResource RowSub}" Text="松开后文字打到光标处，中英文都行" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
                 </StackPanel>
             </Border>
             <TextBlock Style="{StaticResource Footnote}" Text="顶部可切换「侧栏 · 对照 · 译文」：对照＝每句英文下面跟中文，译文＝中文直接盖住英文（读文献用），Esc 随时退出。点击英文单词即可发音。" />
@@ -160,6 +173,30 @@
                 <WrapPanel x:Name="LocalChips" Margin="14,8,0,0" />
                 <TextBlock x:Name="LocalStatus" Style="{StaticResource Footnote}" Margin="14,2,14,0" />
             </StackPanel>
+
+            <!-- Voice input -->
+            <TextBlock Text="语音输入" Style="{StaticResource SectionTitle}" Margin="14,18,0,7" />
+            <Border Style="{StaticResource Group}">
+                <StackPanel>
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <CheckBox x:Name="VoiceBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" />
+                            <TextBlock Style="{StaticResource RowTitle}" Text="按住右 Alt 说话" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource RowSep}" />
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <Button x:Name="VoiceModelBtn" DockPanel.Dock="Right" Style="{StaticResource SecondaryBtn}" Content="下载" VerticalAlignment="Center" Click="VoiceModel_Click" />
+                            <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                                <TextBlock Style="{StaticResource RowTitle}" Text="离线语音模型" />
+                                <TextBlock x:Name="VoiceModelStatus" Style="{StaticResource RowSub}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+            <TextBlock Style="{StaticResource Footnote}" Text="SenseVoice 模型在本机运行，不联网、不上传声音。只在说话时占用内存，闲置几分钟后自动释放。" />
 
             <!-- General -->
             <TextBlock Text="通用" Style="{StaticResource SectionTitle}" Margin="14,18,0,7" />

@@ -19,6 +19,8 @@ public sealed class Config
     public bool StartWithWindows { get; set; }
     /// <summary>Read the word aloud as soon as its card appears (Ctrl + point).</summary>
     public bool AutoSpeakWord { get; set; }
+    /// <summary>Hold right Alt to talk → text typed where the cursor is (offline speech model).</summary>
+    public bool VoiceInput { get; set; } = true;
     /// <summary>How box / full-screen translations are shown: "side" (panel beside), "under" (bilingual over the text), "replace" (Chinese in place).</summary>
     public string BoxView { get; set; } = "side";
     public string FullView { get; set; } = "replace";
