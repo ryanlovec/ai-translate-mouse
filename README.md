@@ -8,7 +8,7 @@ Turn your mouse into an English → Chinese translator that works on top of ever
 </p>
 
 <p align="center">
-<a href="https://github.com/nihaoran786-star/ai-translate-mouse/releases/latest"><b>⬇ 下载 / Download</b></a>
+<a href="https://github.com/ryanlovec/ai-translate-mouse/releases/latest"><b>⬇ 下载 / Download</b></a>
 &nbsp;·&nbsp; <a href="#中文">中文</a> &nbsp;·&nbsp; <a href="#english">English</a>
 </p>
 
@@ -40,7 +40,7 @@ Turn your mouse into an English → Chinese translator that works on top of ever
 
 ### 下载使用
 
-1. 到 [Releases](https://github.com/nihaoran786-star/ai-translate-mouse/releases/latest) 下载 `AIMouse-…-win-x64.zip`
+1. 到 [Releases](https://github.com/ryanlovec/ai-translate-mouse/releases/latest) 下载 `AIMouse-…-win-x64.zip`
 2. 解压，双击 `AIMouse.exe`（不需要安装任何别的东西）
 3. 第一次打开会弹出设置窗口，填入 [DeepSeek](https://platform.deepseek.com) API 密钥即可。程序在右下角托盘里运行
 
@@ -83,7 +83,7 @@ dotnet publish -c Release -o publish
 
 ### Download
 
-1. Get `AIMouse-…-win-x64.zip` from [Releases](https://github.com/nihaoran786-star/ai-translate-mouse/releases/latest)
+1. Get `AIMouse-…-win-x64.zip` from [Releases](https://github.com/ryanlovec/ai-translate-mouse/releases/latest)
 2. Unzip and double-click `AIMouse.exe` — nothing else to install
 3. On first launch, paste your [DeepSeek](https://platform.deepseek.com) API key. The app lives in the system tray.
 
