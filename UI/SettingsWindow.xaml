@@ -1,0 +1,195 @@
+<Window x:Class="AIMouse.UI.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="AI翻译鼠标" Width="560" SizeToContent="Height" ResizeMode="NoResize"
+        Icon="pack://application:,,,/Assets/logo.ico"
+        WindowStartupLocation="CenterScreen" Background="{StaticResource WindowBg}"
+        FontFamily="{StaticResource UIFont}" FontSize="13" Foreground="{StaticResource Label}"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="46" GlassFrameThickness="0,0,0,1" ResizeBorderThickness="0" CornerRadius="0" UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <DockPanel>
+        <!-- Title bar: same color as the window, macOS dots on the left -->
+        <Grid Height="46" DockPanel.Dock="Top">
+            <StackPanel x:Name="Dots" Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center"
+                        WindowChrome.IsHitTestVisibleInChrome="True">
+                <Button Style="{StaticResource TrafficBtn}" Background="#FF5F57" Content="&#xE711;" ToolTip="关闭" Click="Close_Click" />
+                <Button Style="{StaticResource TrafficBtn}" Background="#FEBC2E" Content="&#xE921;" ToolTip="最小化" Click="Min_Click" />
+                <Button Style="{StaticResource TrafficBtn}" Background="#D9D9DE" IsEnabled="False" />
+            </StackPanel>
+            <TextBlock Text="设置" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="#3A3A3C" />
+        </Grid>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+        <StackPanel Margin="28,0,28,22">
+            <!-- Hero -->
+            <StackPanel HorizontalAlignment="Center" Margin="0,0,0,18">
+                <Image Source="pack://application:,,,/Assets/logo_256.png" Width="54" Height="54" RenderOptions.BitmapScalingMode="HighQuality"
+                       Effect="{StaticResource SoftShadow}" />
+                <TextBlock Text="AI翻译鼠标" FontFamily="{StaticResource DisplayFont}" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,8,0,0" />
+                <TextBlock Text="指哪翻哪，边看边学英语" Foreground="{StaticResource Secondary}" HorizontalAlignment="Center" Margin="0,3,0,0" />
+            </StackPanel>
+
+            <!-- Gestures -->
+            <TextBlock Text="手势" Style="{StaticResource SectionTitle}" />
+            <Border Style="{StaticResource Group}">
+                <StackPanel>
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Style="{StaticResource KeyCap}"><TextBlock Style="{StaticResource KeyText}" Text="Ctrl" /></Border>
+                                <TextBlock Text="按住 + 指向单词" Foreground="{StaticResource Secondary}" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource RowTitle}" Text="查单词" />
+                                <TextBlock Style="{StaticResource RowSub}" Text="单词下方弹出释义" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource RowSep}" />
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Style="{StaticResource KeyCap}"><TextBlock Style="{StaticResource KeyText}" Text="Ctrl" /></Border>
+                                <TextBlock Text="按住 + 左键拖框" Foreground="{StaticResource Secondary}" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource RowTitle}" Text="翻译选区" />
+                                <TextBlock Style="{StaticResource RowSub}" Text="旁边显示中英对照" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource RowSep}" />
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Style="{StaticResource KeyCap}"><TextBlock Style="{StaticResource KeyText}" Text="Ctrl" /></Border>
+                                <TextBlock Text="按住 + 右键拖框" Foreground="{StaticResource Secondary}" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource RowTitle}" Text="复制文字" />
+                                <TextBlock Style="{StaticResource RowSub}" Text="识别框内中英文，直接复制" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource RowSep}" />
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Style="{StaticResource KeyCap}"><TextBlock Style="{StaticResource KeyText}" Text="Ctrl" /></Border>
+                                <Border Style="{StaticResource KeyCap}"><TextBlock Style="{StaticResource KeyText}" Text="Ctrl" /></Border>
+                                <TextBlock Text="连按两下" Foreground="{StaticResource Secondary}" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource RowTitle}" Text="全屏翻译" />
+                                <TextBlock Style="{StaticResource RowSub}" Text="再按两下关闭" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+            <TextBlock Style="{StaticResource Footnote}" Text="顶部可切换「侧栏 · 对照 · 译文」：对照＝每句英文下面跟中文，译文＝中文直接盖住英文（读文献用），Esc 随时退出。点击英文单词即可发音。" />
+
+            <!-- Translation service -->
+            <TextBlock Text="翻译服务" Style="{StaticResource SectionTitle}" Margin="14,18,0,7" />
+            <Border Style="{StaticResource Group}">
+                <Border Style="{StaticResource Row}">
+                    <DockPanel>
+                        <Border DockPanel.Dock="Right" Background="{StaticResource Fill}" CornerRadius="8" Padding="2" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="CloudRadio" GroupName="Provider" Style="{StaticResource SegBtn}" Content="DeepSeek 云端" Checked="Provider_Changed" />
+                                <RadioButton x:Name="LocalRadio" GroupName="Provider" Style="{StaticResource SegBtn}" Content="本地模型" Checked="Provider_Changed" />
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Style="{StaticResource RowTitle}" Text="服务" />
+                    </DockPanel>
+                </Border>
+            </Border>
+
+            <!-- DeepSeek -->
+            <StackPanel x:Name="CloudPanel" Margin="0,10,0,0">
+                <Border Style="{StaticResource Group}">
+                    <StackPanel>
+                        <Border Style="{StaticResource Row}">
+                            <DockPanel>
+                                <PasswordBox x:Name="KeyBox" DockPanel.Dock="Right" Width="270" Style="{StaticResource FieldPassword}" />
+                                <TextBlock Style="{StaticResource RowTitle}" Text="API 密钥" />
+                            </DockPanel>
+                        </Border>
+                        <Border Style="{StaticResource RowSep}" />
+                        <Border Style="{StaticResource Row}">
+                            <DockPanel>
+                                <TextBox x:Name="ModelBox" DockPanel.Dock="Right" Width="270" Style="{StaticResource FieldBox}" />
+                                <TextBlock Style="{StaticResource RowTitle}" Text="模型" />
+                            </DockPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+                <TextBlock Style="{StaticResource Footnote}"><Run x:Name="KeyStateRun" Text="在 platform.deepseek.com 申请密钥。" /></TextBlock>
+                <WrapPanel Margin="14,8,0,0">
+                    <Button Style="{StaticResource ChipBtn}" Content="deepseek-flash · 快" Tag="deepseek-flash" Click="ModelChip_Click" />
+                    <Button Style="{StaticResource ChipBtn}" Content="deepseek-v4-pro · 准" Tag="deepseek-v4-pro" Click="ModelChip_Click" />
+                </WrapPanel>
+            </StackPanel>
+
+            <!-- Local -->
+            <StackPanel x:Name="LocalPanel" Margin="0,10,0,0" Visibility="Collapsed">
+                <Border Style="{StaticResource Group}">
+                    <StackPanel>
+                        <Border Style="{StaticResource Row}">
+                            <DockPanel>
+                                <TextBox x:Name="LocalUrlBox" DockPanel.Dock="Right" Width="270" Style="{StaticResource FieldBox}" />
+                                <TextBlock Style="{StaticResource RowTitle}" Text="地址" />
+                            </DockPanel>
+                        </Border>
+                        <Border Style="{StaticResource RowSep}" />
+                        <Border Style="{StaticResource Row}">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <TextBox x:Name="LocalModelBox" Width="190" Style="{StaticResource FieldBox}" />
+                                    <Button x:Name="DetectBtn" Style="{StaticResource SecondaryBtn}" MinWidth="72" Height="30" Padding="10,0" Content="查找" Margin="8,0,0,0" Click="Detect_Click" />
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource RowTitle}" Text="模型" />
+                            </DockPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+                <TextBlock Style="{StaticResource Footnote}" Text="使用电脑上的 Ollama 或 LM Studio，免费、不联网。需先安装并下载模型（推荐 Qwen）。" />
+                <WrapPanel x:Name="LocalChips" Margin="14,8,0,0" />
+                <TextBlock x:Name="LocalStatus" Style="{StaticResource Footnote}" Margin="14,2,14,0" />
+            </StackPanel>
+
+            <!-- General -->
+            <TextBlock Text="通用" Style="{StaticResource SectionTitle}" Margin="14,18,0,7" />
+            <Border Style="{StaticResource Group}">
+                <StackPanel>
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <CheckBox x:Name="AutoSpeakBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" />
+                            <TextBlock Style="{StaticResource RowTitle}" Text="指单词时自动朗读" />
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource RowSep}" />
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <CheckBox x:Name="AutoStartBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" />
+                            <TextBlock Style="{StaticResource RowTitle}" Text="开机自动启动" />
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Footer -->
+            <DockPanel Margin="0,20,0,0">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                    <Button x:Name="TestBtn" Style="{StaticResource SecondaryBtn}" Content="测试连接" Click="Test_Click" />
+                    <Button Style="{StaticResource PrimaryBtn}" Content="完成" Margin="10,0,0,0" Click="Save_Click" IsDefault="True" />
+                </StackPanel>
+                <TextBlock x:Name="ResultText" TextWrapping="Wrap" VerticalAlignment="Center" Margin="2,0,14,0" FontSize="12" />
+            </DockPanel>
+        </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

@@ -3,3 +3,10 @@ obj/
 publish/
 .vs/
 *.user
+AI翻译鼠标/
+data/
+
+# personal screenshots / test output (may contain private screen content)
+tests/*.png
+tests/scroll/
+*.log

@@ -14,6 +14,7 @@ All UI text is Simplified Chinese.
 | Hold **Ctrl** alone, point at a word, keep still ~150 ms | Word card appears **below that line** (never over it). Word gets a thin underline. Move to another word → card updates. |
 | Hold **Ctrl** + left-drag a box | Box translation. 1-line box → result shown as a card below the box. Multi-line box → bilingual side panel next to the box. |
 | Click 📌 in the panel | Box becomes **live**: re-translates automatically when its content changes (scrolling). |
+| Hold **Ctrl** + right-drag a box | **Box copy (OCR → clipboard).** Green box; recognizes Chinese and/or English (zh-Hans engine, auto-enlarged to ~44px glyphs; pure-English lines re-read by the en-US engine), joins wrapped lines into paragraphs, copies to clipboard, shows a small "✓ 已复制 · N 字" note with a preview under the box for ~2.6 s. Ctrl+right-click without drag is re-injected. |
 | **Double-tap Ctrl** | Full-screen live translation of the monitor under the cursor (panel docked at right). Double-tap again closes it. |
 | **Esc** | Closes word card / cancels an in-progress drag (never swallowed). |
 
@@ -89,7 +90,7 @@ Mouse:
 - Wheel / right / middle / X buttons: pass through, set `ctrlUsedMouse=true` if ctrlDown.
 - Esc while dragging → cancel: `dragging=false` (keep swallowing until the button-up, then do nothing), raise `DragCancelled`.
 
-Public API: `Start()`, `Stop()`, `bool Paused {set;}`, events `ArmedChanged(bool armed, POINT pt)`, `HoverStill(POINT)`, `MouseMoved(POINT)`, `DragStarted(POINT)`, `DragMoved(POINT a, POINT b)`, `DragEnded(RECT)`, `DragCancelled`, `DoubleTapCtrl`, `Escape`. Events are raised on the WPF UI thread.
+Public API: `Start()`, `Stop()`, `bool Paused {set;}`, events `ArmedChanged(bool armed, POINT pt)`, `HoverStill(POINT)`, `MouseMoved(POINT)`, `DragStarted(POINT, bool copy)`, `DragMoved(POINT a, POINT b)`, `DragEnded(RECT, bool copy)` (copy = right-button drag), `DragCancelled`, `DoubleTapCtrl`, `Escape`. Events are raised on the WPF UI thread.
 
 ## 6. Capture + OCR
 
@@ -211,3 +212,13 @@ Placement: below the word's **line** bounds: `x = word.Left`, `y = line.Bottom +
 ## 13. Done criteria
 
 `dotnet build -c Release` → 0 errors, 0 warnings that indicate real bugs. App starts to tray, all gestures work, no focus stealing, normal Ctrl shortcuts unaffected.
+
+## v0.2 additions
+
+- **Box translate with no English** → falls back to box copy ("没有英文，已直接复制").
+- **Read aloud** (`Core/Speech.cs`, shared SAPI voice): 🔊 on word card (word + whole English sentence), phrase card, each panel sentence (shows on hover); ▶ in panel header reads all sentences in order and highlights the current one on screen.
+- **Local model**: `Config.Provider` = `deepseek` | `local`; `LocalUrl` (OpenAI-compatible, default Ollama `http://127.0.0.1:11434/v1`), `LocalModel`. `LocalModels.DetectAsync` probes Ollama/LM Studio/llama.cpp/Jan. `<think>…</think>` output is stripped.
+- **DeepSeek resilience**: every attempt is cut off after 9 s; on 5xx/timeout the configured model is swapped for the `deepseek-chat` alias for 10 min; up to 3 retries.
+- **Sentence splitting**: a line that ends early (next line's first word would have fit) ends the paragraph, so list items/labels stay separate.
+- **Brand**: logo = blue→indigo tile, white pointer, amber AI sparkle (`tools/make_logo.ps1` → `Assets/logo.ico`); accent `#4C6EF5`; styles in `App.xaml` (PrimaryBtn, SecondaryBtn, ChipBtn, FieldBox, SegBtn, Card, KeyCap).
+- **Offline dictionary** (`Translate/OfflineDict.cs`): ECDICT (MIT) single words → `data/ecdict.tsv` (27 MB, 402k words + 33k inflection aliases, built by `tools/build_dict.py`, published as `dict/ecdict.tsv`). Binary search on disk, only a line index in memory. Word card shows the dictionary meaning instantly ("离线词典 · AI 释义加载中…"), then the AI's in-context meaning; if the AI fails, the dictionary meaning stays with the reason.
