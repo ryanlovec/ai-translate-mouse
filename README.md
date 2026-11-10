@@ -32,7 +32,7 @@ Turn your mouse into an English → Chinese translator that works on top of ever
 
 <img src="docs/images/copy.png" width="720" alt="Copy text from screen">
 
-**⑤ 语音输入 · Voice typing** — 按住右 Alt 说话，松开自动打字，中英文混说也行，完全离线 / Hold Right Alt, speak, release — offline
+**⑤ 语音输入 · Voice typing** — 按住 Ctrl + Win 说话，松开自动打字，中英文混说也行，完全离线（按键可在设置里改）/ Hold Ctrl + Win, speak, release — offline, key is customizable
 
 <img src="docs/images/voice.png" width="680" alt="Voice input">
 
@@ -57,7 +57,7 @@ Turn your mouse into an English → Chinese translator that works on top of ever
 | 按住 **Ctrl**，指向一个单词 | 在这一行下方弹出单词卡片：音标、释义、例句，可朗读 |
 | 按住 **Ctrl** + 左键拖一个框 | 翻译框里的内容（侧栏 / 对照 / 译文 三种显示方式） |
 | 按住 **Ctrl** + 右键拖一个框 | 识别框里的文字（中文或英文）并复制，图片、不能复制的软件也行 |
-| 按住 **右 Alt** 说话 | 松开后文字自动打到光标处（中文、英文、中英混说都行），同时复制 |
+| 按住 **Ctrl + Win** 说话 | 松开后文字自动打到光标处（中文、英文、中英混说都行），同时复制。按键可在设置里改成任意组合 |
 | 连按两下 **Ctrl** | 全屏实时翻译；“译文”模式用中文直接盖住英文，滚动时译文跟着走，翻过的页面会被记住 |
 | **Esc** | 关闭 / 退出 |
 
@@ -102,7 +102,7 @@ dotnet publish -c Release -o publish
 | Hold **Ctrl** and point at a word | A word card appears below the line: pronunciation, meaning, example, read-aloud |
 | Hold **Ctrl** + left-drag a box | Translate the box (side panel / under each paragraph / replace in place) |
 | Hold **Ctrl** + right-drag a box | Recognize the text in the box (Chinese or English) and copy it — works on images and apps that block copying |
-| Hold **Right Alt** and speak | Release and the text is typed where your cursor is (Chinese, English or mixed), also copied |
+| Hold **Ctrl + Win** and speak | Release and the text is typed where your cursor is (Chinese, English or mixed), also copied. Change the key to anything in Settings |
 | Double-tap **Ctrl** | Live full-screen translation. "Replace" mode covers the English with Chinese, follows scrolling, and remembers pages you've seen |
 | **Esc** | Close / exit |
 

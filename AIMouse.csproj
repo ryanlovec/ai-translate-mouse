@@ -12,7 +12,7 @@
     <RootNamespace>AIMouse</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Product>AI翻译鼠标</Product>
-    <Version>0.7.0</Version>
+    <Version>0.7.1</Version>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>false</SelfContained>
     <ApplicationIcon>Assets\logo.ico</ApplicationIcon>

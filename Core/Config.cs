@@ -19,8 +19,10 @@ public sealed class Config
     public bool StartWithWindows { get; set; }
     /// <summary>Read the word aloud as soon as its card appears (Ctrl + point).</summary>
     public bool AutoSpeakWord { get; set; }
-    /// <summary>Hold right Alt to talk → text typed where the cursor is (offline speech model).</summary>
+    /// <summary>Hold the talk key (default Ctrl+Win) → text typed where the cursor is (offline speech model).</summary>
     public bool VoiceInput { get; set; } = true;
+    /// <summary>Talk key combination, e.g. "Ctrl+Win" (see HotKey).</summary>
+    public string VoiceKey { get; set; } = AIMouse.Input.HotKey.Default;
     /// <summary>How box / full-screen translations are shown: "side" (panel beside), "under" (bilingual over the text), "replace" (Chinese in place).</summary>
     public string BoxView { get; set; } = "side";
     public string FullView { get; set; } = "replace";

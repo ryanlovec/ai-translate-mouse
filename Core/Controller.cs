@@ -68,6 +68,8 @@ public sealed class Controller
             if (_session is { } ss && (ss.View != ViewMode.Side || ss.Mode == SessionMode.FullScreen)) ss.Close();
         };
         _hook.TalkEnabled = () => Config.VoiceInput;
+        _hook.TalkKey = HotKey.Parse(cfg.VoiceKey);
+        Instance = this;
         _hook.TalkDown += OnTalkDown;
         _hook.TalkUp += OnTalkUp;
         _toast.AutoHidden += () => { if (!(_dragActive && _dragCopy)) _copySelection.Hide(); };
@@ -294,6 +296,12 @@ public sealed class Controller
 
     /// <summary>Asks the app to open Settings (e.g. to download the speech model).</summary>
     public event Action? OpenSettingsRequested;
+    public static Controller? Instance { get; private set; }
+    public HotKey TalkKey => _hook.TalkKey;
+    /// <summary>Call after Settings saved: picks up a new talk key.</summary>
+    public void ApplySettings() => _hook.TalkKey = HotKey.Parse(Config.VoiceKey);
+    public void BeginKeyCapture(Action<HotKey?> done) => _hook.BeginCapture(done);
+    public void CancelKeyCapture() => _hook.CancelCapture();
     VoicePill? _pill;
     AIMouse.Voice.Recorder? _recorder;
     bool _recording, _recognizing;
@@ -325,7 +333,7 @@ public sealed class Controller
             _recorder.Start();
             _recording = true;
             _talkStart = Environment.TickCount64;
-            _pill.ShowListening();
+            _pill.ShowListening($"松开 {_hook.TalkKey.Display} 结束");
         }
         catch (Exception ex)
         {

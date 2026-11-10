@@ -69,14 +69,14 @@ public sealed class VoicePill : Window
         SourceInitialized += (_, _) => WindowHelper.MakeToolWindow(this, clickThrough: true);
     }
 
-    public void ShowListening()
+    public void ShowListening(string hint = "松开按键结束")
     {
         _hide.Stop();
         _dot.Visibility = Visibility.Visible;
         _barPanel.Visibility = Visibility.Visible;
         _dot.BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0.35, TimeSpan.FromMilliseconds(650)) { AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever });
         _text.Text = "正在听…";
-        _hint.Text = "松开右 Alt 结束";
+        _hint.Text = hint;
         SetLevel(0);
         Place();
     }

@@ -24,10 +24,26 @@ public sealed class InputHook : IDisposable
     public event Action? DragCancelled;
     public event Action? DoubleTapCtrl;
     public event Action? Escape;
-    /// <summary>Right Alt held / released: push-to-talk voice input. The key itself is swallowed (no menu bar popping up).</summary>
+    /// <summary>Push-to-talk: the talk key combination (default Ctrl+Win) went fully down / was released.</summary>
     public event Action? TalkDown, TalkUp;
-    bool _talkDown;
     public Func<bool> TalkEnabled { get; set; } = () => true;
+    public volatile HotKey TalkKey = HotKey.Parse(HotKey.Default);
+    bool _talkDown;
+    readonly HashSet<uint> _held = new();
+    readonly HashSet<uint> _swallowedDown = new();   // main keys whose "down" we ate, so we eat their "up" too
+    bool _maskWin, _maskAlt;                           // a talk with Win/Alt happened: hide their release from Windows
+    const uint VK_MASK = 0xE8;                         // unassigned key, injected so Win/Alt release doesn't open Start / menus
+
+    // ---- key capture for the Settings "change key" button ----
+    Action<HotKey?>? _capture;
+    readonly List<uint> _captureKeys = new();
+    /// <summary>Next key combination pressed anywhere is reported (null = Esc, cancelled) instead of reaching apps.</summary>
+    public void BeginCapture(Action<HotKey?> done)
+    {
+        _captureKeys.Clear();
+        _capture = done;
+    }
+    public void CancelCapture() => _capture = null;
 
     public volatile bool Paused;
     public volatile int HoldDelayMs = 180;
@@ -146,19 +162,65 @@ public sealed class InputHook : IDisposable
                 bool isCtrl = k.vkCode == VK_LCONTROL || k.vkCode == VK_RCONTROL || k.vkCode == VK_CONTROL;
                 long now = Environment.TickCount64;
 
-                if (k.vkCode == VK_RMENU && (_talkDown || (TalkEnabled() && !Paused && !_ctrlDown)))
+                if (down) _held.Add(k.vkCode);
+                else if (up) _held.Remove(k.vkCode);
+
+                // Settings is waiting for a new talk key: eat everything until the first key is released.
+                if (_capture is { } cap)
                 {
-                    if (down && !_talkDown)
+                    if (down)
                     {
-                        _talkDown = true;
-                        Raise(() => TalkDown?.Invoke());
+                        if (k.vkCode == VK_ESCAPE && _captureKeys.Count == 0)
+                        {
+                            _capture = null;
+                            Raise(() => cap(null));
+                        }
+                        else if (!_captureKeys.Contains(k.vkCode)) _captureKeys.Add(k.vkCode);
                     }
-                    else if (up && _talkDown)
+                    else if (up && _captureKeys.Count > 0)
+                    {
+                        _capture = null;
+                        var hk = HotKey.FromVks(_captureKeys.ToList());
+                        Raise(() => cap(hk));
+                        // apps never saw these keys go down: eat their release too
+                        foreach (var v in _captureKeys) if (v != k.vkCode && _held.Contains(v)) _swallowedDown.Add(v);
+                    }
+                    return (IntPtr)1;
+                }
+
+                var talk = TalkKey;
+                if (isCtrl && talk.OwnsCtrlKey(k.vkCode)) isCtrl = false; // e.g. right Ctrl is the talk key: not a translate gesture
+
+                if (down && !_talkDown && talk.Uses(k.vkCode) && talk.AllHeld(_held) && TalkEnabled() && !Paused && !_dragging)
+                {
+                    _talkDown = true;
+                    _maskWin |= talk.HasWin;
+                    _maskAlt |= talk.HasAlt;
+                    _ctrlAlone = false;
+                    Disarm();
+                    Raise(() => TalkDown?.Invoke());
+                }
+                if (down && _swallowedDown.Contains(k.vkCode) && !talk.Uses(k.vkCode)) return (IntPtr)1; // key repeat after a capture
+                if (down && talk.IsMainKey(k.vkCode) && (_talkDown || _swallowedDown.Contains(k.vkCode)))
+                {
+                    _swallowedDown.Add(k.vkCode);
+                    return (IntPtr)1;   // the app never sees the main key of the combination
+                }
+                if (up)
+                {
+                    if (_talkDown && talk.Uses(k.vkCode))
                     {
                         _talkDown = false;
                         Raise(() => TalkUp?.Invoke());
                     }
-                    if (down || up) return (IntPtr)1;
+                    if (_swallowedDown.Remove(k.vkCode)) return (IntPtr)1;
+                    bool isWin = k.vkCode is 0x5B or 0x5C, isAlt = k.vkCode is 0xA4 or 0xA5;
+                    if ((isWin && _maskWin) || (isAlt && _maskAlt))
+                    {
+                        if (isWin) _maskWin = false; else _maskAlt = false;
+                        MaskRelease(k.vkCode);
+                        return (IntPtr)1;
+                    }
                 }
 
                 if (isCtrl)
@@ -167,7 +229,7 @@ public sealed class InputHook : IDisposable
                     {
                         _ctrlDown = true;
                         _ctrlDownTick = now;
-                        _ctrlAlone = true;
+                        _ctrlAlone = !_talkDown;
                         _ctrlUsedMouse = false;
                     }
                     else if (up && _ctrlDown)
@@ -311,6 +373,17 @@ public sealed class InputHook : IDisposable
             }
         }
         return CallNextHookEx(IntPtr.Zero, nCode, wParam, lParam);
+    }
+
+    /// <summary>Release Win/Alt without Windows reacting (no Start menu, no menu bar): a dummy key goes first.</summary>
+    static void MaskRelease(uint vk)
+    {
+        var inputs = new INPUT[3];
+        inputs[0].type = inputs[1].type = inputs[2].type = INPUT_KEYBOARD;
+        inputs[0].U.ki = new KEYBDINPUT { wVk = (ushort)VK_MASK, dwExtraInfo = OurMagic };
+        inputs[1].U.ki = new KEYBDINPUT { wVk = (ushort)VK_MASK, dwFlags = KEYEVENTF_KEYUP, dwExtraInfo = OurMagic };
+        inputs[2].U.ki = new KEYBDINPUT { wVk = (ushort)vk, dwFlags = KEYEVENTF_KEYUP, dwExtraInfo = OurMagic };
+        SendInput(3, inputs, Marshal.SizeOf<INPUT>());
     }
 
     /// <summary>Paste into whatever app has the keyboard focus (Ctrl+V), marked as ours so the hook ignores it.</summary>

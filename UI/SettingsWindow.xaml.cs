@@ -22,6 +22,9 @@ public partial class SettingsWindow : Window
         AutoSpeakBox.IsChecked = cfg.AutoSpeakWord;
         if (!Speech.Available) AutoSpeakBox.Visibility = Visibility.Collapsed;
         VoiceBox.IsChecked = cfg.VoiceInput;
+        _voiceKey = AIMouse.Input.HotKey.Parse(cfg.VoiceKey);
+        ShowVoiceKey();
+        Closed += (_, _) => { if (_capturing) Controller.Instance?.CancelKeyCapture(); };
         AIMouse.Voice.ModelDownloader.Progress += OnModelProgress;
         AIMouse.Voice.ModelDownloader.Finished += OnModelFinished;
         Closed += (_, _) =>
@@ -151,6 +154,7 @@ public partial class SettingsWindow : Window
         ApplyTo(_cfg);
         _cfg.AutoSpeakWord = AutoSpeakBox.IsChecked == true;
         _cfg.VoiceInput = VoiceBox.IsChecked == true;
+        _cfg.VoiceKey = _voiceKey.ToString();
         bool auto = AutoStartBox.IsChecked == true;
         if (auto != _cfg.StartWithWindows) Config.ApplyStartWithWindows(auto);
         _cfg.StartWithWindows = auto;
@@ -160,6 +164,63 @@ public partial class SettingsWindow : Window
             Close();
         }
         catch (Exception ex) { Show("保存失败：" + ex.Message, true); }
+    }
+
+    // ---------- talk key ----------
+
+    AIMouse.Input.HotKey _voiceKey = AIMouse.Input.HotKey.Parse(null);
+    bool _capturing;
+
+    void ShowVoiceKey(string? note = null, bool warn = false)
+    {
+        Fill(VoiceKeyCaps, _voiceKey);
+        Fill(TalkGestureKeys, _voiceKey);
+        VoiceKeyStatus.Text = note ?? AIMouse.Input.HotKey.Caution(_voiceKey) ?? "按住说话，松开结束";
+        VoiceKeyStatus.Foreground = warn || AIMouse.Input.HotKey.Caution(_voiceKey) != null && note == null
+            ? new SolidColorBrush(Color.FromRgb(0xC9, 0x3C, 0x20)) : (Brush)FindResource("Secondary");
+    }
+
+    void Fill(StackPanel panel, AIMouse.Input.HotKey hk)
+    {
+        panel.Children.Clear();
+        foreach (var t in hk.DisplayTokens)
+            panel.Children.Add(new Border { Style = (Style)FindResource("KeyCap"), Child = new TextBlock { Style = (Style)FindResource("KeyText"), Text = t } });
+    }
+
+    void VoiceKey_Click(object sender, RoutedEventArgs e)
+    {
+        var c = Controller.Instance;
+        if (c == null) return;
+        if (_capturing)
+        {
+            c.CancelKeyCapture();
+            _capturing = false;
+            VoiceKeyBtn.Content = "更改";
+            ShowVoiceKey();
+            return;
+        }
+        _capturing = true;
+        VoiceKeyBtn.Content = "取消";
+        VoiceKeyCaps.Children.Clear();
+        VoiceKeyStatus.Text = "现在按下想用的按键或组合键（如 Ctrl + Win、F8），Esc 取消";
+        VoiceKeyStatus.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0x7A, 0xFF));
+        c.BeginKeyCapture(hk =>
+        {
+            _capturing = false;
+            VoiceKeyBtn.Content = "更改";
+            if (hk == null) { ShowVoiceKey(); return; }
+            var problem = AIMouse.Input.HotKey.Problem(hk);
+            if (problem != null) { ShowVoiceKey($"{hk.Display}：{problem}", warn: true); return; }
+            _voiceKey = hk;
+            ShowVoiceKey(AIMouse.Input.HotKey.Caution(hk) ?? "已设置，点“完成”保存");
+        });
+    }
+
+    void VoiceKeyReset_Click(object sender, RoutedEventArgs e)
+    {
+        if (_capturing) { Controller.Instance?.CancelKeyCapture(); _capturing = false; VoiceKeyBtn.Content = "更改"; }
+        _voiceKey = AIMouse.Input.HotKey.Parse(AIMouse.Input.HotKey.Default);
+        ShowVoiceKey("已恢复默认 Ctrl + Win");
     }
 
     // ---------- offline speech model ----------

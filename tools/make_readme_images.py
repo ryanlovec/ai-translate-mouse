@@ -108,4 +108,4 @@ if os.path.exists(os.path.join(src, "pill_listen.png")):
     col.paste(a, (0, 45))
     dd.text((30, 180), "② 松开 → 文字打到光标处  Release → text is typed for you", font=f_small, fill=GREY)
     col.paste(b, (0, 212))
-    save(frame(caption(col, ["右 Alt"], "按住右 Alt 说话，松开自动打字", "Hold Right Alt and speak — Chinese, English or mixed, offline"), 0.85), "voice.png")
+    save(frame(caption(col, ["Ctrl", "Win"], "按住 Ctrl + Win 说话，松开自动打字", "Hold Ctrl + Win and speak — Chinese / English, offline"), 0.85), "voice.png")

@@ -93,6 +93,16 @@ public partial class App : Application
     }
 
     [System.Runtime.InteropServices.DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)] static extern int GetClassName(IntPtr h, StringBuilder s, int n);
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)] static extern int GetWindowText(IntPtr h, StringBuilder s, int n);
+    /// <summary>Test only: a plain (untagged) simulated key press, so our own hook treats it like a real one.</summary>
+    static void KeySim(uint vk, bool up)
+    {
+        var i = new INPUT[1];
+        i[0].type = Win32.INPUT_KEYBOARD;
+        i[0].U.ki = new KEYBDINPUT { wVk = (ushort)vk, dwFlags = up ? Win32.KEYEVENTF_KEYUP : 0 };
+        Win32.SendInput(1, i, System.Runtime.InteropServices.Marshal.SizeOf<INPUT>());
+    }
 
     protected override void OnExit(ExitEventArgs e)
     {
@@ -151,7 +161,7 @@ public partial class App : Application
                 return;
             }
             _settings = new SettingsWindow(_cfg);
-            _settings.Closed += (_, _) => _settings = null;
+            _settings.Closed += (_, _) => { _settings = null; _controller?.ApplySettings(); };
             _settings.Show();
             _settings.Activate();
         });
@@ -436,13 +446,54 @@ public partial class App : Application
                         using var bmp = ScreenCapture.Capture(new RECT(wa.Left + wa.Width / 2 - 450, wa.Bottom - 160, wa.Left + wa.Width / 2 + 450, wa.Bottom));
                         bmp.Save(Path.Combine(args[1], name), SD.Imaging.ImageFormat.Png);
                     }
-                    pill.ShowListening();
+                    pill.ShowListening("松开 Ctrl + Win 结束");
                     pill.SetLevel(0.75);
                     await Snap("pill_listen.png");
                     pill.ShowWorking();
                     await Snap("pill_work.png");
                     pill.ShowResult("我明天要交一个 homework，老师说 the deadline is Friday。", "已输入 · 也已复制");
                     await Snap("pill_done.png");
+                    break;
+                }
+                case "--selftest-keys":
+                {
+                    // Drives the real keyboard hook with simulated key presses and checks what it reports.
+                    var hook = new AIMouse.Input.InputHook(Dispatcher);
+                    var log = new List<string>();
+                    hook.TalkDown += () => log.Add("TalkDown");
+                    hook.TalkUp += () => log.Add("TalkUp");
+                    hook.ArmedChanged += (a, _) => log.Add(a ? "Armed" : "Disarmed");
+                    hook.DoubleTapCtrl += () => log.Add("DoubleTap");
+                    hook.Start();
+                    await Task.Delay(300);
+                    void Key(uint vk, bool up) => KeySim(vk, up);
+                    async Task Press(params (uint vk, bool up, int wait)[] seq) { foreach (var (vk, up, wait) in seq) { Key(vk, up); await Task.Delay(wait); } await Task.Delay(250); }
+                    var report = new StringBuilder();
+                    async Task Case(string name, Func<Task> act)
+                    {
+                        log.Clear();
+                        await act();
+                        var fg = GetForegroundWindow();
+                        var cls = new StringBuilder(256); GetClassName(fg, cls, 256);
+                        var title = new StringBuilder(256); GetWindowText(fg, title, 256);
+                        report.AppendLine($"{name}: [{string.Join(", ", log)}]  foreground={cls}/{title}");
+                    }
+                    const uint C = 0xA2, W = 0x5B, F8 = 0x77, F24 = 0x87;
+                    await Case("ctrl+win (ctrl first)", () => Press((C, false, 40), (W, false, 400), (W, true, 40), (C, true, 40)));
+                    await Case("ctrl+win (win first)", () => Press((W, false, 40), (C, false, 400), (C, true, 40), (W, true, 40)));
+                    await Case("ctrl hold alone", () => Press((C, false, 450), (C, true, 40)));
+                    await Case("ctrl double tap", () => Press((C, false, 60), (C, true, 120), (C, false, 60), (C, true, 40)));
+                    await Case("ctrl+F24 (other shortcut)", () => Press((C, false, 40), (F24, false, 40), (F24, true, 40), (C, true, 40)));
+                    hook.TalkKey = AIMouse.Input.HotKey.Parse("F8");
+                    await Case("talk key F8", () => Press((F8, false, 300), (F8, true, 40)));
+                    AIMouse.Input.HotKey? got = null;
+                    hook.BeginCapture(h => got = h);
+                    await Case("capture Ctrl+Alt+Space", () => Press((C, false, 40), (0xA4, false, 40), (0x20, false, 60), (0x20, true, 40), (0xA4, true, 40), (C, true, 40)));
+                    report.AppendLine("captured: " + (got?.ToString() ?? "null") + " display=" + got?.Display);
+                    foreach (var t in new[] { "Ctrl+Win", "F8", "RCtrl", "A", "Ctrl", "Ctrl+Space", "Ctrl+Shift", "Space" })
+                        report.AppendLine($"rule {t}: {AIMouse.Input.HotKey.Problem(AIMouse.Input.HotKey.Parse(t) is var p && p.ToString() == t ? p : AIMouse.Input.HotKey.Parse(t)) ?? "ok"} {(AIMouse.Input.HotKey.Parse(t).ToString() != t ? "(rejected→" + AIMouse.Input.HotKey.Parse(t) + ")" : "")}");
+                    hook.Stop();
+                    File.WriteAllText(Path.Combine(Path.GetTempPath(), "aimouse_keys.txt"), report.ToString());
                     break;
                 }
                 case "--selftest-asr":

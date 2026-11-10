@@ -92,7 +92,7 @@
                     <Border Style="{StaticResource Row}">
                         <DockPanel>
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                <Border Style="{StaticResource KeyCap}"><TextBlock Style="{StaticResource KeyText}" Text="右 Alt" /></Border>
+                                <StackPanel x:Name="TalkGestureKeys" Orientation="Horizontal" />
                                 <TextBlock Text="按住说话" Foreground="{StaticResource Secondary}" VerticalAlignment="Center" />
                             </StackPanel>
                             <StackPanel VerticalAlignment="Center">
@@ -181,7 +181,21 @@
                     <Border Style="{StaticResource Row}">
                         <DockPanel>
                             <CheckBox x:Name="VoiceBox" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center" />
-                            <TextBlock Style="{StaticResource RowTitle}" Text="按住右 Alt 说话" VerticalAlignment="Center" />
+                            <TextBlock Style="{StaticResource RowTitle}" Text="语音输入" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource RowSep}" />
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <StackPanel x:Name="VoiceKeyCaps" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                <Button x:Name="VoiceKeyBtn" Style="{StaticResource SecondaryBtn}" Content="更改" Click="VoiceKey_Click" />
+                                <Button x:Name="VoiceKeyReset" Style="{StaticResource SecondaryBtn}" Content="默认" Margin="8,0,0,0" Click="VoiceKeyReset_Click" />
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                                <TextBlock Style="{StaticResource RowTitle}" Text="说话按键" />
+                                <TextBlock x:Name="VoiceKeyStatus" Style="{StaticResource RowSub}" TextWrapping="Wrap" Text="按住说话，松开结束" />
+                            </StackPanel>
                         </DockPanel>
                     </Border>
                     <Border Style="{StaticResource RowSep}" />
