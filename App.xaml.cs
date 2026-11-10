@@ -61,6 +61,12 @@ public partial class App : Application
         _controller.Start();
         SetupTray();
 
+        int shots = Array.IndexOf(args, "--readme-shots");
+        if (shots >= 0 && args.Length >= shots + 2)
+        {
+            _ = ReadmeShotsAsync(args[shots + 1]);
+            return;
+        }
         int demoScroll = Array.IndexOf(args, "--demo-scroll");
         if (demoScroll >= 0 && args.Length >= demoScroll + 4)
         {

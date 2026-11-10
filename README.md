@@ -12,6 +12,26 @@ Turn your mouse into an English → Chinese translator that works on top of ever
 &nbsp;·&nbsp; <a href="#中文">中文</a> &nbsp;·&nbsp; <a href="#english">English</a>
 </p>
 
+<p align="center"><img src="docs/images/fullscreen.png" alt="连按两下 Ctrl，整页变中文 / Double-tap Ctrl to see the whole page in Chinese"></p>
+
+## 示例 · Screenshots
+
+**① 查单词 · Look up a word** — 按住 Ctrl 指向单词 / Hold Ctrl and point
+
+<img src="docs/images/word.png" width="720" alt="Word card">
+
+**② 框选翻译 · Translate a box** — 按住 Ctrl 左键拖框 / Hold Ctrl and left-drag
+
+<img src="docs/images/box.png" width="820" alt="Box translation, side panel">
+
+**③ 对照模式 · Side-by-side view** — 在面板顶部切换“侧栏 / 对照 / 译文” / Switch views at the top of the panel
+
+<img src="docs/images/under.png" width="720" alt="Side-by-side view">
+
+**④ 识别复制 · Copy any text** — 按住 Ctrl 右键拖框，图片里的字也能复制 / Hold Ctrl and right-drag, works on images too
+
+<img src="docs/images/copy.png" width="720" alt="Copy text from screen">
+
 ---
 
 <a id="中文"></a>

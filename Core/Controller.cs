@@ -364,6 +364,10 @@ public sealed class Controller
     /// <summary>For testing: open a box session on a region directly.</summary>
     internal RegionSession? CurrentSession => _session;
 
+    /// <summary>README screenshots: show the "译" badge and the word card at a point, as if Ctrl were held there.</summary>
+    internal void DemoWord(POINT p) { OnArmedChanged(true, p); OnHoverStill(p); }
+    internal void DemoReset() { HideCard(); OnArmedChanged(false, new POINT(0, 0)); _session?.Close(); }
+
     public void Demo(RECT r, bool fullScreen, ViewMode? view = null, bool live = false)
     {
         _session?.Close();
